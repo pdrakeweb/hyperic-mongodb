@@ -1,0 +1,350 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+   Copyright 2011 Clarity Services, Inc.
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+   
+    Document   : mongodb-plugin.xml
+    Author     : Reid Morrison
+    Home Page  : https://github.com/ClarityServices/hyperic-mongodb
+    Version    : 1.0
+    Description:
+        Hyperic HQ Plug-in to monitor MongoDB
+-->
+<!DOCTYPE plugin [
+  <!ENTITY process-metrics SYSTEM "/pdk/plugins/process-metrics.xml">
+]>
+
+<plugin>
+    <!-- Invoke mongo shell and extract serverStatus -->
+  <script name="hq-mongodb-stat">
+<![CDATA[
+#!/bin/bash
+
+JAVA_SCRIPT=$(cat <<EOF
+function flattenBson(hash, prefix) {
+    for(key in hash) {
+        value = hash[key];
+        klass = Object.prototype.toString.call(value).slice(8, -1);
+        if(klass == "bson_object") {
+            flattenBson(value, prefix+"_"+key)
+        } else {
+            print(prefix+"_"+key+"="+value)
+        };
+    }
+};
+flattenBson(db.serverStatus(), "serverStatus");
+EOF
+)
+
+mongo --quiet --eval "$JAVA_SCRIPT"
+]]>
+  </script>
+  
+  <filter name="template" value="exec:timeout=10,file=pdk/work/scripts/mongodb/hq-mongodb-stat,exec=%exec%:${alias}"/>
+  
+  <metrics name="MongoDB Configuration">
+    <metric name="Version"
+            alias="serverStatus_version"
+            category="UTILIZATION"
+            defaultOn="true"
+            collectionType="static"/>
+    <metric name="Bits"
+            alias="serverStatus_mem_bits"
+            category="UTILIZATION"
+            defaultOn="true"
+            collectionType="static"/>
+    <metric name="Is Master"
+            alias="serverStatus_repl_ismaster"
+            category="UTILIZATION"
+            defaultOn="true"
+            indicator="true"/>
+            
+  </metrics>
+  
+  <metrics name="MongoDB Utilization">
+    <metric name="Active Connections"
+            alias="serverStatus_connections_current"
+            category="UTILIZATION"
+            defaultOn="true"
+            collectionType="trendsup"
+            rate="1m"
+            indicator="true"/>
+    <metric name="Total Database Size"
+            alias="serverStatus_mem_mapped"
+            category="UTILIZATION"
+            defaultOn="false"
+            collectionType="trendsup"
+            units="MB"
+            indicator="false"/>
+  </metrics>
+  
+  <metrics name="MongoDB IO">
+    <!-- Operations -->
+    <metric name="Inserts"
+            alias="serverStatus_opcounters_insert"
+            category="THROUGHPUT"
+            defaultOn="true"
+            collectionType="trendsup"
+            rate="1m"
+            indicator="true"/>
+            
+    <metric name="Queries"
+            alias="serverStatus_opcounters_query"
+            category="THROUGHPUT"
+            defaultOn="true"
+            collectionType="trendsup"
+            rate="1m"
+            indicator="true"/>
+            
+    <metric name="Updates"
+            alias="serverStatus_opcounters_update"
+            category="THROUGHPUT"
+            defaultOn="true"
+            collectionType="trendsup"
+            rate="1m"
+            indicator="true"/>
+
+    <metric name="Deletes"
+            alias="serverStatus_opcounters_delete"
+            category="THROUGHPUT"
+            defaultOn="true"
+            collectionType="trendsup"
+            rate="1m"
+            indicator="true"/>
+            
+    <metric name="Getmores"
+            alias="serverStatus_opcounters_getmore"
+            category="THROUGHPUT"
+            defaultOn="true"
+            collectionType="trendsup"
+            rate="1m"
+            indicator="true"/>
+            
+    <metric name="Commands"
+            alias="serverStatus_opcounters_command"
+            category="THROUGHPUT"
+            defaultOn="true"
+            collectionType="trendsup"
+            rate="1m"
+            indicator="true"/>
+  </metrics>
+    
+  <metrics name="MongoDB Global Lock">
+    <metric name="Global Lock Time"
+            alias="serverStatus_globalLock_lockTime"
+            category="UTILIZATION"
+            defaultOn="false"
+            collectionType="trendsup"
+            rate="1m"
+            units="mu"
+            indicator="false"/>
+    <metric name="Global Lock Total Time"
+            alias="serverStatus_globalLock_totalTime"
+            category="UTILIZATION"
+            defaultOn="false"
+            collectionType="trendsup"
+            rate="1m"
+            units="mu"
+            indicator="false"/>
+    <metric name="Global Lock Ratio"
+            alias="serverStatus_globalLock_ratio"
+            category="UTILIZATION"
+            defaultOn="false"
+            units="percentage"
+            indicator="false"/>
+    <metric name="Global Lock Current Queue Total"
+            alias="serverStatus_globalLock_currentQueue_total"
+            category="UTILIZATION"
+            defaultOn="false"
+            indicator="false"/>
+    <metric name="Global Lock Current Queue Readers"
+            alias="serverStatus_globalLock_currentQueue_readers"
+            category="UTILIZATION"
+            defaultOn="false"
+            indicator="false"/>
+    <metric name="Global Lock Current Queue Writers"
+            alias="serverStatus_globalLock_currentQueue_writers"
+            category="UTILIZATION"
+            defaultOn="false"
+            indicator="false"/>
+  </metrics>
+  
+  <metrics name="MongoDB Index">
+    <metric name="Index Accesses"
+            alias="serverStatus_indexCounters_btree_accesses"
+            category="UTILIZATION"
+            defaultOn="false"
+            collectionType="trendsup"
+            indicator="false"/>
+    <metric name="Index Hits"
+            alias="serverStatus_indexCounters_btree_hits"
+            category="UTILIZATION"
+            defaultOn="false"
+            collectionType="trendsup"
+            indicator="false"/>
+    <metric name="Index Misses"
+            alias="serverStatus_indexCounters_btree_misses"
+            category="UTILIZATION"
+            defaultOn="true"
+            collectionType="trendsup"
+            indicator="true"/>
+    <metric name="Index Resets"
+            alias="serverStatus_indexCounters_btree_resets"
+            category="UTILIZATION"
+            defaultOn="false"
+            collectionType="trendsup"
+            indicator="false"/>
+    <metric name="Index Miss Ratio"
+            alias="serverStatus_indexCounters_btree_missRatio"
+            category="UTILIZATION"
+            defaultOn="false"
+            units="percentage"
+            indicator="false"/>
+  </metrics>
+  
+  <metrics name="MongoDB Cursors">
+    <metric name="Open Cursors"
+            alias="serverStatus_cursors_totalOpen"
+            category="UTILIZATION"
+            defaultOn="true"
+            collectionType="trendsup"
+            indicator="true"/>
+    <metric name="Cursors Size"
+            alias="serverStatus_cursors_clientCursors_size"
+            category="UTILIZATION"
+            defaultOn="false"
+            collectionType="trendsup"
+            indicator="false"/>
+    <metric name="Cursors Timed Out"
+            alias="serverStatus_cursors_timedOut"
+            category="UTILIZATION"
+            defaultOn="false"
+            collectionType="trendsup"
+            indicator="false"/>
+  </metrics>
+
+  <metrics name="MongoDB Asserts">
+    <metric name="Asserts Regular"
+            alias="serverStatus_asserts_regular"
+            category="UTILIZATION"
+            defaultOn="false"
+            collectionType="trendsup"
+            indicator="false"/>
+    <metric name="Asserts Warning"
+            alias="serverStatus_asserts_warning"
+            category="UTILIZATION"
+            defaultOn="false"
+            collectionType="trendsup"
+            indicator="false"/>
+    <metric name="Asserts Msg"
+            alias="serverStatus_asserts_msg"
+            category="UTILIZATION"
+            defaultOn="false"
+            collectionType="trendsup"
+            indicator="false"/>
+    <metric name="Asserts User"
+            alias="serverStatus_asserts_user"
+            category="UTILIZATION"
+            defaultOn="false"
+            collectionType="trendsup"
+            indicator="false"/>
+    <metric name="Asserts Rollovers"
+            alias="serverStatus_asserts_rollovers"
+            category="UTILIZATION"
+            defaultOn="false"
+            collectionType="trendsup"
+            indicator="false"/>
+  </metrics>
+        
+  <metrics name="MongoDB Background Flushing">
+    <metric name="Flushes"
+            alias="serverStatus_backgroundFlushing_flushes"
+            category="UTILIZATION"
+            defaultOn="false"
+            collectionType="trendsup"
+            indicator="false"/>
+    <metric name="Total Flush Duration"
+            alias="serverStatus_backgroundFlushing_total_ms"
+            category="UTILIZATION"
+            defaultOn="false"
+            collectionType="trendsup"
+            units="ms"
+            indicator="false"/>
+    <metric name="Flush Average Duration"
+            alias="serverStatus_backgroundFlushing_average_ms"
+            category="UTILIZATION"
+            defaultOn="false"
+            units="ms"
+            indicator="false"/>
+    <metric name="Flush Last Duration"
+            alias="serverStatus_backgroundFlushing_last_ms"
+            category="UTILIZATION"
+            defaultOn="false"
+            collectionType="trendsup"
+            units="ms"
+            indicator="false"/>
+  </metrics>
+        
+  <server name="MongoDB" version="1.6">
+
+    <property name="PROC_QUERY" value="State.Name.eq=mongod,State.Name.Pne=$1"/>
+    <property name="DEFAULT_CONFIG_FILE" value="/etc/mongod.conf"/>
+    <property name="DEFAULT_LOG_FILE" value="/var/log/mongo/mongod.log"/>
+    <property name="DEFAULT_DB_PATH" value="/var/lib/mongo"/>
+
+    <!-- default sockaddr.port -->
+    <property name="port" value="28017"/>
+
+    <config include="sockaddr">
+      <option name="process.query" 
+              description="Process Query" 
+              default="${PROC_QUERY}"/>
+    </config>
+
+    <!-- inventory properties -->
+    <properties>
+      <property name="version" description="Version"/>
+    </properties>
+    
+    <!--notifies the plugin to auto-discover one instance of each service-->
+    <property name="HAS_BUILTIN_SERVICES" value="true"/>
+
+    <plugin type="autoinventory" 
+            class="org.hyperic.hq.product.DaemonDetector"/>
+    <plugin type="measurement" 
+            class="org.hyperic.hq.product.MeasurementPlugin"/>
+    <plugin type="config_track"
+            class="org.hyperic.hq.product.ConfigFileTrackPlugin"/>
+    <plugin type="log_track"
+            class="org.hyperic.hq.product.LogFileTailPlugin"/>
+
+    <metric name="Availability"
+            template="sigar:Type=ProcState,Arg=%process.query%:State"
+            indicator="true"/>
+            
+    <!-- Include mongod process information -->
+    &process-metrics;
+    
+    <metrics include="MongoDB Configuration"/>
+    <metrics include="MongoDB Utilization"/>
+    <metrics include="MongoDB IO"/>
+    <metrics include="MongoDB Global Lock"/>
+    <metrics include="MongoDB Index"/>
+    <metrics include="MongoDB Cursors"/>
+    <metrics include="MongoDB Asserts"/>
+    <metrics include="MongoDB Background Flushing"/>
+       
+  </server>
+
+</plugin>
