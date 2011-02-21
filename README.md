@@ -47,20 +47,38 @@ Tested with [Hyperic HQ](http://www.hyperic.com/) version 4.4
 
 ### Install
 
-Meta
-----
+#### Server Installation
+
+* Copy the file _hyperic-mongodb.xml_ into the following folder under the server installation:
+    hq-engine/server/default/deploy/hq.ear/hq-plugins
+* Output similar to the following should appear in the server logfile (logs/server.log)
+<pre>
+2011-02-21 13:53:53,972 INFO  [ScannerThread] [org.hyperic.hq.product.server.mbean.ProductPluginDeployer@654] HQ plugin mongodb-plugin.xml undeployed
+2011-02-21 13:53:53,995 INFO  [ScannerThread] [org.hyperic.hq.product.server.mbean.ProductPluginDeployer@654] HQ plugin mongodb registered
+2011-02-21 13:53:54,001 INFO  [ScannerThread] [org.hyperic.hq.product.server.session.ProductManagerEJBImpl@320] mongodb unknown -- registering
+2011-02-21 13:53:54,217 INFO  [ScannerThread] [org.hyperic.hq.product.server.mbean.ProductPluginDeployer@654] HQ plugin mongodb deployed
+</pre>
+* If the out above does not appear in the log file ensure that the file is in the directory
+along with several other files ending with _-plugin.xml_ and _-plugin.jar_
+* It is not necessary to restart the server, it automatically picks up new plugins. 
+
+#### Client Installation
+
+* Copy the file _hyperic-mongodb.xml_ into the plugins folder under the client installation. The path should be similar to:
+    agent/bundles/agent-4.4.0-1509/pdk/plugins/
+* Restart the agent to pull in the new plugin file
+
+### Meta
 
 * Code: `git clone git://github.com/ClarityServices/hyperic-mongodb.git`
 * Home: <https://github.com/ClarityServices/hyperic-mongodb>
 * Bugs: <https://github.com/ClarityServices/hyperic-mongodb/issues>
 
-Author
-------
+### Author
 
 Reid Morrison :: rubywmq@gmail.com :: @reidmorrison
 
-License
--------
+### License
 
 Copyright 2011 Clarity Services, Inc.
 
