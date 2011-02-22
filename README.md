@@ -68,6 +68,14 @@ along with several other files ending with _-plugin.xml_ and _-plugin.jar_
     agent/bundles/agent-4.4.0-1509/pdk/plugins/
 * Restart the agent to pull in the new plugin file
 
+### Developers
+
+To generate updated documentation for the HyperForge Wiki, run the following command:
+
+    java -jar bundles/agent-4.4.0-1509/pdk/lib/hq-product.jar -Dplugins.exclude=vsphere -m generate -a metrics-wiki
+
+Then update the page on "HyperForge":http://support.hyperic.com/display/hypcomm/MongoDB
+
 ### Meta
 
 * Code: `git clone git://github.com/ClarityServices/hyperic-mongodb.git`
