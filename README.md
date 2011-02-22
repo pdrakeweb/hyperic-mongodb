@@ -20,6 +20,8 @@ All metrics available via the db.serverStatus() command have been made available
 
 Additionally, all server process (mongod) metrics are also available.
 
+For the complete list of Metrics available, please see the [HyperForge MongoDB documentation](http://support.hyperic.com/display/hypcomm/MongoDB)
+
 ### Log File Tracking
 
 Messages are optionally reported from mongodb.log and can be filtered by 
@@ -74,7 +76,7 @@ To generate updated documentation for the HyperForge Wiki, run the following com
 
     java -jar bundles/agent-4.4.0-1509/pdk/lib/hq-product.jar -Dplugins.exclude=vsphere -m generate -a metrics-wiki
 
-Then update the page on "HyperForge":http://support.hyperic.com/display/hypcomm/MongoDB
+Then update the page on [HyperForge](http://support.hyperic.com/display/hypcomm/MongoDB)
 
 ### Meta
 
