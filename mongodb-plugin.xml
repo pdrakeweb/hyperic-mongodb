@@ -17,7 +17,7 @@
     Document   : mongodb-plugin.xml
     Author     : Reid Morrison
     Home Page  : https://github.com/ClarityServices/hyperic-mongodb
-    Version    : 1.0
+    Version    : 1.2
     Description:
         Hyperic HQ Plug-in to monitor MongoDB
 -->
@@ -54,16 +54,15 @@ mongo --host $1 --port $2 --quiet --eval "$JAVA_SCRIPT"
     <filter name="template" value="${SERVER_STATUS}:${alias}"/>
 
     <metrics name="MongoDB Utilization">
-        <metric name="Active Connections"
+        <metric name="Connections"
                 alias="serverStatus_connections_current"
                 category="UTILIZATION"
                 indicator="true"/>
-        <metric name="Total Database Size"
+        <metric name="Used Disk Space"
                 alias="serverStatus_mem_mapped"
                 category="UTILIZATION"
-                defaultOn="false"
                 units="MB"
-                indicator="false"/>
+                indicator="true"/>
     </metrics>
 
     <metrics name="MongoDB IO">
@@ -116,11 +115,11 @@ mongo --host $1 --port $2 --quiet --eval "$JAVA_SCRIPT"
                 alias="serverStatus_globalLock_lockTime"
                 category="UTILIZATION"
                 collectionType="trendsup"
-                units="mu"/>
+                units="mu"
+                indicator="true"/>
         <metric name="Global Lock Total Time"
                 alias="serverStatus_globalLock_totalTime"
                 category="UTILIZATION"
-                collectionType="trendsup"
                 units="mu"/>
         <metric name="Global Lock Ratio"
                 alias="serverStatus_globalLock_ratio"
@@ -163,16 +162,21 @@ mongo --host $1 --port $2 --quiet --eval "$JAVA_SCRIPT"
     </metrics>
 
     <metrics name="MongoDB Cursors">
-        <metric name="Open Cursors"
+        <metric name="Cursors"
                 alias="serverStatus_cursors_totalOpen"
                 category="UTILIZATION"
+                collectionType="trendsup"
+                defaultOn="true"
                 indicator="true"/>
         <metric name="Cursors Size"
                 alias="serverStatus_cursors_clientCursors_size"
                 category="UTILIZATION"/>
         <metric name="Cursors Timed Out"
                 alias="serverStatus_cursors_timedOut"
-                category="UTILIZATION"/>
+                category="UTILIZATION"
+                collectionType="trendsup"
+                defaultOn="true"
+                indicator="true"/>
     </metrics>
 
     <metrics name="MongoDB Asserts">
@@ -203,11 +207,12 @@ mongo --host $1 --port $2 --quiet --eval "$JAVA_SCRIPT"
                 alias="serverStatus_backgroundFlushing_flushes"
                 category="UTILIZATION"
                 collectionType="trendsup"/>
-        <metric name="Total Flush Duration"
+        <metric name="Flush Duration"
                 alias="serverStatus_backgroundFlushing_total_ms"
                 category="UTILIZATION"
                 collectionType="trendsup"
-                units="ms"/>
+                units="ms"
+                indicator="true"/>
         <metric name="Flush Average Duration"
                 alias="serverStatus_backgroundFlushing_average_ms"
                 category="UTILIZATION"
