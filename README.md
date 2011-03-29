@@ -16,9 +16,11 @@ The MongoDB server process (mongod) is auto-discovered.
 
 ### Metrics
 
-All metrics available via the db.serverStatus() command have been made available.
-
-Additionally, all server process (mongod) metrics are also available.
+The following metrics are available:
+* All [db.serverStatus()](http://www.mongodb.org/display/DOCS/serverStatus) metrics
+* The number of seconds that a secondary server (replica) is behind the primary server
+* All server process (mongod) metrics are also available
+** For Example, CPU utilization, Resident Memory, etc.
 
 For the complete list of Metrics available, please see the [HyperForge MongoDB documentation](http://support.hyperic.com/display/hypcomm/MongoDB)
 
@@ -71,6 +73,10 @@ along with several other files ending with _-plugin.xml_ and _-plugin.jar_
 * Restart the agent to pull in the new plugin file
 
 ### Developers
+
+To test any changes prior to deploying
+
+    java -jar bundles/agent-4.4.0-1509/pdk/lib/hq-product.jar -Dplugins.include=mongodb -m discover -a metric
 
 To generate updated documentation for the HyperForge Wiki, run the following command:
 
