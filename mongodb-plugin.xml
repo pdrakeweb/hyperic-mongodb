@@ -32,6 +32,23 @@
 #!/bin/bash
 
 JAVA_SCRIPT=$(cat <<EOF
+// Print the number of seconds that this replica is behind
+function replicaSecondsBehind() {  
+  status = db.adminCommand({replSetGetStatus:1})
+  // Extract "seconds_behind_primary" in a replica set
+  if(status["myState"] == 2) {
+    members = status["members"]
+    for(i in members) {
+      member = members[i]
+      if (member.self == true && member.optime) {
+        print("replica_seconds_behind="+((new Date) - member.optimeDate) / 1000)
+        break;
+      }
+    }
+  }
+};
+
+// Print BSON as name value pairs
 function flattenBson(hash, prefix) {
     for(key in hash) {
         value = hash[key];
@@ -44,6 +61,7 @@ function flattenBson(hash, prefix) {
     }
 };
 flattenBson(db.serverStatus(), "serverStatus");
+replicaSecondsBehind();
 EOF
 )
 
@@ -62,6 +80,11 @@ mongo --host $1 --port $2 --quiet --eval "$JAVA_SCRIPT"
                 alias="serverStatus_mem_mapped"
                 category="UTILIZATION"
                 units="MB"
+                indicator="true"/>
+        <metric name="Replica Seconds Behind"
+                alias="replica_seconds_behind"
+                category="UTILIZATION"
+                units="sec"
                 indicator="true"/>
     </metrics>
 
