@@ -21,6 +21,7 @@ The following metrics are available:
 * All [db.serverStatus()](http://www.mongodb.org/display/DOCS/serverStatus) metrics
 * The number of seconds that a secondary server (replica) is behind the primary server
 * All server process (mongod) metrics are also available
+
 ** For Example, CPU utilization, Resident Memory, etc.
 
 For the complete list of Metrics available, please see the [HyperForge MongoDB documentation](http://support.hyperic.com/display/hypcomm/MongoDB)
@@ -55,18 +56,19 @@ Tested with [Hyperic HQ](http://www.hyperic.com/) version 4.4 and 4.5.1
 #### Server Installation
 
 * Fetch the latest version of the file using something like wget or a browser:
-
-   wget --no-check-certificate https://github.com/ClarityServices/hyperic-mongodb/raw/master/mongodb-plugin.xml
-
+<pre>
+wget --no-check-certificate https://github.com/ClarityServices/hyperic-mongodb/raw/master/mongodb-plugin.xml
+</pre>
 * Copy the file _hyperic-mongodb.xml_ into the following folder under the server installation
+
 ** For Hyperic 4.5.1
-
-    hq-plugins
-
+<pre>
+hq-plugins
+</pre>
 ** For Hyperic 4.4
-
-    hq-engine/server/default/deploy/hq.ear/hq-plugins
-
+<pre>
+hq-engine/server/default/deploy/hq.ear/hq-plugins
+</pre>
 * Output similar to the following should appear in the server logfile (logs/server.log)
 <pre>
 2011-02-21 13:53:53,972 INFO  [ScannerThread] [org.hyperic.hq.product.server.mbean.ProductPluginDeployer@654] HQ plugin mongodb-plugin.xml undeployed
@@ -81,14 +83,16 @@ along with several other files ending with _-plugin.xml_ and _-plugin.jar_
 #### Client Installation
 
 * Copy the file _hyperic-mongodb.xml_ into the plugins folder under the client installation. The path should be similar to:
-** For Hyperic 4.5.1
 
-    hq-plugins
+** For Hyperic 4.5.1
+<pre>
+hq-plugins
+</pre>
 
 ** For Hyperic 4.4
-
-    agent/bundles/agent-4.4.0-1509/pdk/plugins/
-
+<pre>
+agent/bundles/agent-4.4.0-1509/pdk/plugins/
+</pre>
 * Restart the agent to pull in the new plugin file
 
 ### Developers
