@@ -33,17 +33,25 @@
 
 JAVA_SCRIPT=$(cat <<EOF
 // Print the number of seconds that this replica is behind
-function replicaSecondsBehind() {  
-  status = db.adminCommand({replSetGetStatus:1})
-  // Extract "seconds_behind_primary" in a replica set
+function replicaSecondsBehind() {
+  status = rs.status();
+  // Extract "seconds_behind_primary" for a secondary (slave) in a replica set
   if(status["myState"] == 2) {
+    // Obtain optime for master and this replica
+    master_optime = null
+    my_optime = null
+
     members = status["members"]
     for(i in members) {
       member = members[i]
       if (member.self == true && member.optime) {
-        print("replica_seconds_behind="+((new Date) - member.optimeDate) / 1000)
-        break;
+        my_optime = member.optimeDate;
+      } else if (member.state == 1) {
+        master_optime = member.optimeDate;
       }
+    }
+    if (master_optime && my_optime) {
+      print("replica_seconds_behind="+(master_optime - my_optime) / 1000)
     }
   }
 };
