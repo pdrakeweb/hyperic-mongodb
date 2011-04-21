@@ -12,11 +12,12 @@ Also made it work on Windows? Please fork and submit a pull request. (Or just em
 
 ### Auto-Discovery
 
-The MongoDB server process (mongod) is auto-discovered. 
+The MongoDB server process (mongod) is auto-discovered.
 
 ### Metrics
 
 The following metrics are available:
+
 * All [db.serverStatus()](http://www.mongodb.org/display/DOCS/serverStatus) metrics
 * The number of seconds that a secondary server (replica) is behind the primary server
 * All server process (mongod) metrics are also available
@@ -26,7 +27,7 @@ For the complete list of Metrics available, please see the [HyperForge MongoDB d
 
 ### Log File Tracking
 
-Messages are optionally reported from mongodb.log and can be filtered by 
+Messages are optionally reported from mongodb.log and can be filtered by
 regex include/exclude.
 
 ### Config File Tracking
@@ -47,14 +48,25 @@ Tested on Red Hat Enterprise Linux 5 with Mongodb 1.6.5
 
 ### Hyperic HQ Version Support
 
-Tested with [Hyperic HQ](http://www.hyperic.com/) version 4.4
+Tested with [Hyperic HQ](http://www.hyperic.com/) version 4.4 and 4.5.1
 
 ### Install
 
 #### Server Installation
 
-* Copy the file _hyperic-mongodb.xml_ into the following folder under the server installation:
+* Fetch the latest version of the file using something like wget or a browser:
+
+   wget --no-check-certificate https://github.com/ClarityServices/hyperic-mongodb/raw/master/mongodb-plugin.xml
+
+* Copy the file _hyperic-mongodb.xml_ into the following folder under the server installation
+** For Hyperic 4.5.1
+
+    hq-plugins
+
+** For Hyperic 4.4
+
     hq-engine/server/default/deploy/hq.ear/hq-plugins
+
 * Output similar to the following should appear in the server logfile (logs/server.log)
 <pre>
 2011-02-21 13:53:53,972 INFO  [ScannerThread] [org.hyperic.hq.product.server.mbean.ProductPluginDeployer@654] HQ plugin mongodb-plugin.xml undeployed
@@ -62,14 +74,21 @@ Tested with [Hyperic HQ](http://www.hyperic.com/) version 4.4
 2011-02-21 13:53:54,001 INFO  [ScannerThread] [org.hyperic.hq.product.server.session.ProductManagerEJBImpl@320] mongodb unknown -- registering
 2011-02-21 13:53:54,217 INFO  [ScannerThread] [org.hyperic.hq.product.server.mbean.ProductPluginDeployer@654] HQ plugin mongodb deployed
 </pre>
-* If the out above does not appear in the log file ensure that the file is in the directory
+* If the output above does not appear in the log file ensure that the file is in the directory
 along with several other files ending with _-plugin.xml_ and _-plugin.jar_
-* It is not necessary to restart the server, it automatically picks up new plugins. 
+* It is not necessary to restart the server, it automatically picks up new plugins.
 
 #### Client Installation
 
 * Copy the file _hyperic-mongodb.xml_ into the plugins folder under the client installation. The path should be similar to:
+** For Hyperic 4.5.1
+
+    hq-plugins
+
+** For Hyperic 4.4
+
     agent/bundles/agent-4.4.0-1509/pdk/plugins/
+
 * Restart the agent to pull in the new plugin file
 
 ### Developers
