@@ -45,13 +45,17 @@ function replicaSecondsBehind() {
     for(i in members) {
       member = members[i]
       if (member.self == true && member.optime) {
-        my_optime = member.optimeDate;
+        my_optime = member.optime.t;
       } else if (member.state == 1) {
-        master_optime = member.optimeDate;
+        master_optime = member.optime.t;
       }
     }
     if (master_optime && my_optime) {
-      print("replica_seconds_behind="+(master_optime - my_optime) / 1000)
+      secs = (master_optime - my_optime) / 1000
+      if (secs < 0) {
+        secs = 0
+      }
+      print("replica_seconds_behind="+secs)
     }
   }
 };

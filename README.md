@@ -4,6 +4,8 @@ This project is a Hyperic HQ plugin for monitoring [MongoDB](http://www.mongodb.
 
 Source code is available at [github.com/ClarityServices/hyperic-mongodb](https://github.com/ClarityServices/hyperic-mongodb)
 
+For screen shots of some of the items that can be monitored, see the [Hyperic HQ MongoDB plugin Wiki](https://github.com/ClarityServices/hyperic-mongodb/wiki)
+
 ### Platform Support
 
 Only supports MongoDB running on Unix, Linux and Mac since it uses a bash shell to invoke the mongo shell.
