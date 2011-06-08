@@ -21,10 +21,9 @@ The MongoDB server process (mongod) is auto-discovered.
 The following metrics are available:
 
 * All [db.serverStatus()](http://www.mongodb.org/display/DOCS/serverStatus) metrics
-* The number of seconds that a secondary server (replica) is behind the primary server
-* All server process (mongod) metrics are also available
-
-** For Example, CPU utilization, Resident Memory, etc.
+* Replication delay - The number of seconds that a secondary server (replica) is behind the primary server
+* Replication oplog time - Maximum time any Secondary servers can fall behind the master before needing a full re-synch
+* All server process (mongod) metrics are also available - CPU Utilization, Resident Memory, etc.
 
 For the complete list of Metrics available, please see the [HyperForge MongoDB documentation](http://support.hyperic.com/display/hypcomm/MongoDB)
 

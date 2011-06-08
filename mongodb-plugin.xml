@@ -17,7 +17,7 @@
     Document   : mongodb-plugin.xml
     Author     : Reid Morrison
     Home Page  : https://github.com/ClarityServices/hyperic-mongodb
-    Version    : 1.2
+    Version    : 1.3
     Description:
         Hyperic HQ Plug-in to monitor MongoDB
 -->
@@ -35,7 +35,7 @@ JAVA_SCRIPT=$(cat <<EOF
 // Print the number of seconds that this replica is behind
 function replicaSecondsBehind() {
   status = rs.status();
-  // Extract "seconds_behind_primary" for a secondary (slave) in a replica set
+  // Extract replica delay for a secondary (slave) in a replica set
   if(status["myState"] == 2) {
     // Obtain optime for master and this replica
     master_optime = null
@@ -72,8 +72,18 @@ function flattenBson(hash, prefix) {
         };
     }
 };
-flattenBson(db.serverStatus(), "serverStatus");
-replicaSecondsBehind();
+
+status = db.serverStatus();
+flattenBson(status, "serverStatus");
+
+// Additional metrics only if in a Replica Set
+repl = status["repl"];
+if(repl != null) {
+    flattenBson(db.getReplicationInfo(), "replication_info")
+    if(repl["secondary"] == true) {
+        replicaSecondsBehind();
+    }
+};
 EOF
 )
 
@@ -93,11 +103,15 @@ mongo --host $1 --port $2 --quiet --eval "$JAVA_SCRIPT"
                 category="UTILIZATION"
                 units="MB"
                 indicator="true"/>
-        <metric name="Replica Seconds Behind"
+        <metric name="Replication Delay"
                 alias="replica_seconds_behind"
                 category="UTILIZATION"
                 units="sec"
                 indicator="true"/>
+        <metric name="Replication oplog"
+                alias="replication_info_timeDiff"
+                category="UTILIZATION"
+                units="sec"/>
     </metrics>
 
     <metrics name="MongoDB IO">
@@ -200,7 +214,6 @@ mongo --host $1 --port $2 --quiet --eval "$JAVA_SCRIPT"
         <metric name="Cursors"
                 alias="serverStatus_cursors_totalOpen"
                 category="UTILIZATION"
-                collectionType="trendsup"
                 defaultOn="true"
                 indicator="true"/>
         <metric name="Cursors Size"
