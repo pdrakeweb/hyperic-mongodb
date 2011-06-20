@@ -17,7 +17,7 @@
     Document   : mongodb-plugin.xml
     Author     : Reid Morrison
     Home Page  : https://github.com/ClarityServices/hyperic-mongodb
-    Version    : 1.3
+    Version    : 1.4
     Description:
         Hyperic HQ Plug-in to monitor MongoDB
 -->
@@ -166,21 +166,13 @@ mongo --host $1 --port $2 --quiet --eval "$JAVA_SCRIPT"
                 collectionType="trendsup"
                 units="mu"
                 indicator="true"/>
-        <metric name="Global Lock Total Time"
-                alias="serverStatus_globalLock_totalTime"
-                category="UTILIZATION"
-                units="mu"/>
-        <metric name="Global Lock Ratio"
-                alias="serverStatus_globalLock_ratio"
-                category="UTILIZATION"
-                units="percentage"/>
-        <metric name="Global Lock Current Queue Total"
+        <metric name="Global Lock Queue Total"
                 alias="serverStatus_globalLock_currentQueue_total"
                 category="UTILIZATION"/>
-        <metric name="Global Lock Current Queue Readers"
+        <metric name="Global Lock Queue Readers"
                 alias="serverStatus_globalLock_currentQueue_readers"
                 category="UTILIZATION"/>
-        <metric name="Global Lock Current Queue Writers"
+        <metric name="Global Lock Queue Writers"
                 alias="serverStatus_globalLock_currentQueue_writers"
                 category="UTILIZATION"/>
     </metrics>
