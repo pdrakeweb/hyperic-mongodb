@@ -17,9 +17,23 @@
     Document   : mongodb-plugin.xml
     Author     : Reid Morrison
     Home Page  : https://github.com/ClarityServices/hyperic-mongodb
-    Version    : 1.4
+    Version    : 2.0
     Description:
         Hyperic HQ Plug-in to monitor MongoDB
+
+    Version 2.0 brings the MongoDB Monitoring closer the figures
+    returned by mongostat, such as memory, faults, Queued Readers, etc.
+    Now supports monitoring remote MongoDB servers without requiring a
+    Hyperic Agent to be installed on the MongoDB server. Just requires mongostat
+    to be available on the machine where the Agent is running.
+    However, CPU utilization is no longer available through this plugin.
+    To get CPU utilization create a separate Process monitor through Hyperic.
+
+    All monitoring is performed by calling the following methods though Mongo Shell:
+    - db.serverStatus()
+    - db.getReplicationInfo()
+
+    db.getReplicationInfo() is only called if the server is part of a Replica Set
 -->
 <!DOCTYPE plugin [
   <!ENTITY process-metrics SYSTEM "/pdk/plugins/process-metrics.xml">
@@ -83,6 +97,7 @@ if(repl != null) {
     if(repl["secondary"] == true) {
         replicaSecondsBehind();
     }
+    print("master=" + (repl["ismaster"] ? 1 : 0))
 };
 EOF
 )
@@ -98,20 +113,66 @@ mongo --host $1 --port $2 --quiet --eval "$JAVA_SCRIPT"
                 alias="serverStatus_connections_current"
                 category="UTILIZATION"
                 indicator="true"/>
-        <metric name="Used Disk Space"
-                alias="serverStatus_mem_mapped"
-                category="UTILIZATION"
-                units="MB"
-                indicator="true"/>
+        <metric name="Connections Available"
+                alias="serverStatus_connections_available"
+                category="UTILIZATION"/>
         <metric name="Replication Delay"
                 alias="replica_seconds_behind"
                 category="UTILIZATION"
                 units="sec"
                 indicator="true"/>
-        <metric name="Replication oplog"
+        <metric name="Replication Log Available"
                 alias="replication_info_timeDiff"
                 category="UTILIZATION"
                 units="sec"/>
+        <metric name="Uptime"
+                alias="serverStatus_uptime"
+                category="UTILIZATION"
+                units="sec"/>
+
+        <!-- This metric is platform specific -->
+        <metric name="Page faults"
+                alias="serverStatus_extra_info_page_faults"
+                category="UTILIZATION"
+                collectionType="trendsup"
+                indicator="true"/>
+    </metrics>
+
+    <metrics name="MongoDB Network">
+        <metric name="Network In"
+                alias="serverStatus_network_bytesIn"
+                category="UTILIZATION"
+                indicator="true"
+                collectionType="trendsup"
+                units="B"/>
+        <metric name="Network Out"
+                alias="serverStatus_network_bytesOut"
+                category="UTILIZATION"
+                indicator="true"
+                collectionType="trendsup"
+                units="B"/>
+        <metric name="Network Requests"
+                alias="serverStatus_network_numRequests"
+                collectionType="trendsup"
+                category="UTILIZATION"/>
+    </metrics>
+
+    <metrics name="MongoDB Memory">
+        <metric name="Mapped Memory"
+                alias="serverStatus_mem_mapped"
+                category="UTILIZATION"
+                indicator="true"
+                units="MB"/>
+        <metric name="Virtual Memory Size"
+                alias="serverStatus_mem_virtual"
+                category="UTILIZATION"
+                indicator="true"
+                units="MB"/>
+        <metric name="Resident Memory Size"
+                alias="serverStatus_mem_resident"
+                category="UTILIZATION"
+                indicator="true"
+                units="MB"/>
     </metrics>
 
     <metrics name="MongoDB IO">
@@ -119,62 +180,69 @@ mongo --host $1 --port $2 --quiet --eval "$JAVA_SCRIPT"
         <metric name="Inserts"
                 alias="serverStatus_opcounters_insert"
                 category="THROUGHPUT"
-                defaultOn="true"
                 collectionType="trendsup"
                 indicator="true"/>
 
         <metric name="Queries"
                 alias="serverStatus_opcounters_query"
                 category="THROUGHPUT"
-                defaultOn="true"
                 collectionType="trendsup"
                 indicator="true"/>
 
         <metric name="Updates"
                 alias="serverStatus_opcounters_update"
                 category="THROUGHPUT"
-                defaultOn="true"
                 collectionType="trendsup"
                 indicator="true"/>
 
         <metric name="Deletes"
                 alias="serverStatus_opcounters_delete"
                 category="THROUGHPUT"
-                defaultOn="true"
                 collectionType="trendsup"
                 indicator="true"/>
 
         <metric name="Getmores"
                 alias="serverStatus_opcounters_getmore"
                 category="THROUGHPUT"
-                defaultOn="true"
                 collectionType="trendsup"
                 indicator="true"/>
 
         <metric name="Commands"
                 alias="serverStatus_opcounters_command"
                 category="THROUGHPUT"
-                defaultOn="true"
                 collectionType="trendsup"
                 indicator="true"/>
     </metrics>
 
     <metrics name="MongoDB Global Lock">
-        <metric name="Global Lock Time"
+        <metric name="Lock Time"
                 alias="serverStatus_globalLock_lockTime"
                 category="UTILIZATION"
                 collectionType="trendsup"
                 units="mu"
                 indicator="true"/>
-        <metric name="Global Lock Queue Total"
+        <metric name="Queued Requests"
                 alias="serverStatus_globalLock_currentQueue_total"
                 category="UTILIZATION"/>
-        <metric name="Global Lock Queue Readers"
+        <metric name="Queued Readers"
                 alias="serverStatus_globalLock_currentQueue_readers"
-                category="UTILIZATION"/>
-        <metric name="Global Lock Queue Writers"
+                category="UTILIZATION"
+                indicator="true"/>
+        <metric name="Queued Writers"
                 alias="serverStatus_globalLock_currentQueue_writers"
+                category="UTILIZATION"
+                indicator="true"/>
+        <metric name="Active Clients"
+                alias="serverStatus_globalLock_activeClients_total"
                 category="UTILIZATION"/>
+        <metric name="Active Readers"
+                alias="serverStatus_globalLock_activeClients_readers"
+                category="UTILIZATION"
+                indicator="true"/>
+        <metric name="Active Writers"
+                alias="serverStatus_globalLock_activeClients_writers"
+                category="UTILIZATION"
+                indicator="true"/>
     </metrics>
 
     <metrics name="MongoDB Index">
@@ -189,7 +257,6 @@ mongo --host $1 --port $2 --quiet --eval "$JAVA_SCRIPT"
         <metric name="Index Misses"
                 alias="serverStatus_indexCounters_btree_misses"
                 category="UTILIZATION"
-                defaultOn="true"
                 collectionType="trendsup"
                 indicator="true"/>
         <metric name="Index Resets"
@@ -205,18 +272,14 @@ mongo --host $1 --port $2 --quiet --eval "$JAVA_SCRIPT"
     <metrics name="MongoDB Cursors">
         <metric name="Cursors"
                 alias="serverStatus_cursors_totalOpen"
-                category="UTILIZATION"
-                defaultOn="true"
-                indicator="true"/>
+                category="UTILIZATION"/>
         <metric name="Cursors Size"
                 alias="serverStatus_cursors_clientCursors_size"
                 category="UTILIZATION"/>
         <metric name="Cursors Timed Out"
                 alias="serverStatus_cursors_timedOut"
                 category="UTILIZATION"
-                collectionType="trendsup"
-                defaultOn="true"
-                indicator="true"/>
+                collectionType="trendsup"/>
     </metrics>
 
     <metrics name="MongoDB Asserts">
@@ -246,13 +309,13 @@ mongo --host $1 --port $2 --quiet --eval "$JAVA_SCRIPT"
         <metric name="Flushes"
                 alias="serverStatus_backgroundFlushing_flushes"
                 category="UTILIZATION"
-                collectionType="trendsup"/>
+                collectionType="trendsup"
+                indicator="true"/>
         <metric name="Flush Duration"
                 alias="serverStatus_backgroundFlushing_total_ms"
                 category="UTILIZATION"
                 collectionType="trendsup"
-                units="ms"
-                indicator="true"/>
+                units="ms"/>
         <metric name="Flush Average Duration"
                 alias="serverStatus_backgroundFlushing_average_ms"
                 category="UTILIZATION"
@@ -265,16 +328,12 @@ mongo --host $1 --port $2 --quiet --eval "$JAVA_SCRIPT"
 
     <server name="MongoDB" version="1.6">
 
-        <property name="PROC_QUERY" value="State.Name.eq=mongod"/>
+        <property name="PROC_QUERY" value="State.Name.eq=mongod,"/>
         <property name="DEFAULT_CONFIG_FILE" value="/etc/mongod.conf"/>
         <property name="DEFAULT_LOG_FILE" value="/var/log/mongo/mongod.log"/>
         <property name="DEFAULT_DB_PATH" value="/var/lib/mongo"/>
 
         <config>
-            <option name="process.query"
-                    description="Process Query"
-                    default="${PROC_QUERY}"/>
-
             <option name="hostname"
                     description="Usually leave as localhost"
                     default="localhost"/>
@@ -284,14 +343,15 @@ mongo --host $1 --port $2 --quiet --eval "$JAVA_SCRIPT"
                     default="27017"/>
         </config>
 
-        <!-- Display inventory properties on the UI -->
+        <!-- Display inventory properties on the UI
+             These properties do not show up in Hyperic :(
+             Any help here will be appreciated
+        -->
         <properties>
             <property name="serverStatus_version"
                       description="MongoDB Version"/>
             <property name="serverStatus_mem_bits"
                       description="MongoDB Build (bits)"/>
-            <property name="serverStatus_repl_ismaster"
-                      description="MongoDB Master?"/>
         </properties>
 
         <!--notifies the plugin to auto-discover one instance of each service-->
@@ -307,30 +367,29 @@ mongo --host $1 --port $2 --quiet --eval "$JAVA_SCRIPT"
                 class="org.hyperic.hq.product.LogFileTailPlugin"/>
 
         <metric name="Availability"
-                template="sigar:Type=ProcState,Arg=%process.query%:State"
+                template="${SERVER_STATUS}:serverStatus_ok"
                 indicator="true"/>
 
-        <!-- Include mongod process information -->
-        &process-metrics;
+        <metric name="Is Master?"
+                template="${SERVER_STATUS}:master"
+                category="AVAILABILITY"
+                units="percentage"/>
 
         <metrics include="MongoDB Utilization"/>
+        <metrics include="MongoDB Network"/>
+        <metrics include="MongoDB Memory"/>
         <metrics include="MongoDB IO"/>
         <metrics include="MongoDB Global Lock"/>
         <metrics include="MongoDB Index"/>
         <metrics include="MongoDB Cursors"/>
         <metrics include="MongoDB Asserts"/>
         <metrics include="MongoDB Background Flushing"/>
-
     </server>
+
     <help name="MongoDB">
   Configure Hyperic for monitoring MongoDB.
   The port for Mongodb is by default 27017, please change the port above if required.
-  For servers that have more than one MongoDB instance, update the port,
-  then change the "process.query" to something like: "State.Name.eq=mongod,Args.*.ew=mongod.conf" where
-  mongod.conf must be replaced with the configuration filename for this instance of mongod.
-  Hyperic uses the process parameters
-  to figure out which mongod instance to monitor. For more information on the valid options, see:
-        http://support.hyperic.com/display/SIGAR/PTQL
+  For servers that have more than one MongoDB instance, update the port.
     </help>
 
 </plugin>
