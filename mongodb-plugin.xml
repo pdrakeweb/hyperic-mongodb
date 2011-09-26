@@ -17,9 +17,12 @@
     Document   : mongodb-plugin.xml
     Author     : Reid Morrison
     Home Page  : https://github.com/ClarityServices/hyperic-mongodb
-    Version    : 2.0
+    Version    : 2.1
     Description:
         Hyperic HQ Plug-in to monitor MongoDB
+
+    Version 2.1 Adds support for secured servers and re-introduces
+    process monitoring using config file name for process auto-detection
 
     Version 2.0 brings the MongoDB Monitoring closer the figures
     returned by mongostat, such as memory, faults, Queued Readers, etc.
@@ -44,6 +47,9 @@
     <script name="hq-mongodb-stat">
 <![CDATA[
 #!/bin/bash
+# Parameters: %hostname% %port% %username% %password%
+#    username and password are optional, but must be supplied if the
+#    mongo server has been secured
 
 JAVA_SCRIPT=$(cat <<EOF
 // Print the number of seconds that this replica is behind
@@ -87,6 +93,14 @@ function flattenBson(hash, prefix) {
     }
 };
 
+// Authenticate first if username was supplied
+if ("$3" != "") {
+  if (db.auth("$3", "$4") != 1) {
+    print("Failed to authenticate. Bad Credentials");
+    exit(-1);
+  }
+}
+
 status = db.serverStatus();
 flattenBson(status, "serverStatus");
 
@@ -102,10 +116,10 @@ if(repl != null) {
 EOF
 )
 
-mongo --host $1 --port $2 --quiet --eval "$JAVA_SCRIPT"
+mongo --host $1 --port $2 --quiet admin --eval "$JAVA_SCRIPT"
 ]]>
     </script>
-    <property name="SERVER_STATUS" value="exec:timeout=10,file=pdk/work/scripts/mongodb/hq-mongodb-stat,args=%hostname% %port%,exec=%exec%"/>
+    <property name="SERVER_STATUS" value="exec:timeout=10,file=pdk/work/scripts/mongodb/hq-mongodb-stat,args=%hostname% %port% %username% %password%,exec=%exec%"/>
     <filter name="template" value="${SERVER_STATUS}:${alias}"/>
 
     <metrics name="MongoDB Utilization">
@@ -326,21 +340,40 @@ mongo --host $1 --port $2 --quiet --eval "$JAVA_SCRIPT"
                 units="ms"/>
     </metrics>
 
-    <server name="MongoDB" version="1.6">
+    <metrics name="MongoDB Process Metrics">
+        <metric name="Process Cpu Usage"
+                template="sigar:Type=ProcCpu,Arg=%process.query%:Percent"
+                indicator="true"
+                units="percentage"/>
+    </metrics>
 
-        <property name="PROC_QUERY" value="State.Name.eq=mongod,"/>
+    <server name="MongoDB" version="2">
+
+        <property name="PROC_QUERY" value="State.Name.eq=mongod,Args.*.eq=/etc/mongod.conf"/>
         <property name="DEFAULT_CONFIG_FILE" value="/etc/mongod.conf"/>
         <property name="DEFAULT_LOG_FILE" value="/var/log/mongo/mongod.log"/>
-        <property name="DEFAULT_DB_PATH" value="/var/lib/mongo"/>
+        <property name="DEFAULT_PID_FILE" value="/var/run/mongo/mongod.pid"/>
 
         <config>
+            <option name="process.query"
+                    description="PTQL for MongoDB Process"
+                    default="${PROC_QUERY}"/>
+
             <option name="hostname"
                     description="Usually leave as localhost"
                     default="localhost"/>
 
             <option name="port"
-                    description="MongoDB port number"
-                    default="27017"/>
+                    description="MongoDB port number. Usually: 27017, 27018 or 27019"
+                    default="27018"/>
+
+            <option name="username"
+                    description="User name [Optional - Must have 'admin' database access if specified]"
+                    default=""/>
+
+            <option name="password"
+                    description="Password [Optional]"
+                    default=""/>
         </config>
 
         <!-- Display inventory properties on the UI
@@ -376,6 +409,7 @@ mongo --host $1 --port $2 --quiet --eval "$JAVA_SCRIPT"
                 units="percentage"/>
 
         <metrics include="MongoDB Utilization"/>
+        <metrics include="MongoDB Process Metrics"/>
         <metrics include="MongoDB Network"/>
         <metrics include="MongoDB Memory"/>
         <metrics include="MongoDB IO"/>
@@ -388,7 +422,7 @@ mongo --host $1 --port $2 --quiet --eval "$JAVA_SCRIPT"
 
     <help name="MongoDB">
   Configure Hyperic for monitoring MongoDB.
-  The port for Mongodb is by default 27017, please change the port above if required.
+  The port for Mongodb is by default 27018, please change the port above if required.
   For servers that have more than one MongoDB instance, update the port.
     </help>
 
