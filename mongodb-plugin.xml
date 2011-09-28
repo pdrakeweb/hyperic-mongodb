@@ -94,7 +94,7 @@ function flattenBson(hash, prefix) {
 };
 
 // Authenticate first if username was supplied
-if ("$3" != "") {
+if (("$3" != "") && ("$3" != "%username%")) {
   if (db.auth("$3", "$4") != 1) {
     print("Failed to authenticate. Bad Credentials");
     exit(-1);
@@ -126,22 +126,27 @@ mongo --host $1 --port $2 --quiet admin --eval "$JAVA_SCRIPT"
         <metric name="Connections"
                 alias="serverStatus_connections_current"
                 category="UTILIZATION"
+                interval="300000"
                 indicator="true"/>
         <metric name="Connections Available"
                 alias="serverStatus_connections_available"
+                interval="600000"
                 category="UTILIZATION"/>
         <metric name="Replication Delay"
                 alias="replica_seconds_behind"
                 category="UTILIZATION"
                 units="sec"
+                interval="300000"
                 indicator="true"/>
         <metric name="Replication Log Available"
                 alias="replication_info_timeDiff"
                 category="UTILIZATION"
+                interval="600000"
                 units="sec"/>
         <metric name="Uptime"
                 alias="serverStatus_uptime"
                 category="UTILIZATION"
+                interval="600000"
                 units="sec"/>
 
         <!-- This metric is platform specific -->
@@ -149,6 +154,7 @@ mongo --host $1 --port $2 --quiet admin --eval "$JAVA_SCRIPT"
                 alias="serverStatus_extra_info_page_faults"
                 category="UTILIZATION"
                 collectionType="trendsup"
+                interval="300000"
                 indicator="true"/>
     </metrics>
 
@@ -158,16 +164,19 @@ mongo --host $1 --port $2 --quiet admin --eval "$JAVA_SCRIPT"
                 category="UTILIZATION"
                 indicator="true"
                 collectionType="trendsup"
+                interval="300000"
                 units="B"/>
         <metric name="Network Out"
                 alias="serverStatus_network_bytesOut"
                 category="UTILIZATION"
                 indicator="true"
                 collectionType="trendsup"
+                interval="300000"
                 units="B"/>
         <metric name="Network Requests"
                 alias="serverStatus_network_numRequests"
                 collectionType="trendsup"
+                interval="300000"
                 category="UTILIZATION"/>
     </metrics>
 
@@ -176,16 +185,19 @@ mongo --host $1 --port $2 --quiet admin --eval "$JAVA_SCRIPT"
                 alias="serverStatus_mem_mapped"
                 category="UTILIZATION"
                 indicator="true"
+                interval="300000"
                 units="MB"/>
         <metric name="Virtual Memory Size"
                 alias="serverStatus_mem_virtual"
                 category="UTILIZATION"
                 indicator="true"
+                interval="300000"
                 units="MB"/>
         <metric name="Resident Memory Size"
                 alias="serverStatus_mem_resident"
                 category="UTILIZATION"
                 indicator="true"
+                interval="300000"
                 units="MB"/>
     </metrics>
 
@@ -195,36 +207,42 @@ mongo --host $1 --port $2 --quiet admin --eval "$JAVA_SCRIPT"
                 alias="serverStatus_opcounters_insert"
                 category="THROUGHPUT"
                 collectionType="trendsup"
+                interval="300000"
                 indicator="true"/>
 
         <metric name="Queries"
                 alias="serverStatus_opcounters_query"
                 category="THROUGHPUT"
                 collectionType="trendsup"
+                interval="300000"
                 indicator="true"/>
 
         <metric name="Updates"
                 alias="serverStatus_opcounters_update"
                 category="THROUGHPUT"
                 collectionType="trendsup"
+                interval="300000"
                 indicator="true"/>
 
         <metric name="Deletes"
                 alias="serverStatus_opcounters_delete"
                 category="THROUGHPUT"
                 collectionType="trendsup"
+                interval="300000"
                 indicator="true"/>
 
         <metric name="Getmores"
                 alias="serverStatus_opcounters_getmore"
                 category="THROUGHPUT"
                 collectionType="trendsup"
+                interval="300000"
                 indicator="true"/>
 
         <metric name="Commands"
                 alias="serverStatus_opcounters_command"
                 category="THROUGHPUT"
                 collectionType="trendsup"
+                interval="300000"
                 indicator="true"/>
     </metrics>
 
@@ -234,28 +252,35 @@ mongo --host $1 --port $2 --quiet admin --eval "$JAVA_SCRIPT"
                 category="UTILIZATION"
                 collectionType="trendsup"
                 units="mu"
+                interval="300000"
                 indicator="true"/>
         <metric name="Queued Requests"
                 alias="serverStatus_globalLock_currentQueue_total"
+                interval="300000"
                 category="UTILIZATION"/>
         <metric name="Queued Readers"
                 alias="serverStatus_globalLock_currentQueue_readers"
                 category="UTILIZATION"
+                interval="300000"
                 indicator="true"/>
         <metric name="Queued Writers"
                 alias="serverStatus_globalLock_currentQueue_writers"
                 category="UTILIZATION"
+                interval="300000"
                 indicator="true"/>
         <metric name="Active Clients"
                 alias="serverStatus_globalLock_activeClients_total"
+                interval="300000"
                 category="UTILIZATION"/>
         <metric name="Active Readers"
                 alias="serverStatus_globalLock_activeClients_readers"
                 category="UTILIZATION"
+                interval="300000"
                 indicator="true"/>
         <metric name="Active Writers"
                 alias="serverStatus_globalLock_activeClients_writers"
                 category="UTILIZATION"
+                interval="300000"
                 indicator="true"/>
     </metrics>
 
@@ -263,36 +288,44 @@ mongo --host $1 --port $2 --quiet admin --eval "$JAVA_SCRIPT"
         <metric name="Index Accesses"
                 alias="serverStatus_indexCounters_btree_accesses"
                 category="UTILIZATION"
+                interval="300000"
                 collectionType="trendsup"/>
         <metric name="Index Hits"
                 alias="serverStatus_indexCounters_btree_hits"
                 category="UTILIZATION"
+                interval="300000"
                 collectionType="trendsup"/>
         <metric name="Index Misses"
                 alias="serverStatus_indexCounters_btree_misses"
                 category="UTILIZATION"
                 collectionType="trendsup"
+                interval="300000"
                 indicator="true"/>
         <metric name="Index Resets"
                 alias="serverStatus_indexCounters_btree_resets"
                 category="UTILIZATION"
+                interval="300000"
                 collectionType="trendsup"/>
         <metric name="Index Miss Ratio"
                 alias="serverStatus_indexCounters_btree_missRatio"
                 category="UTILIZATION"
+                interval="600000"
                 units="percentage"/>
     </metrics>
 
     <metrics name="MongoDB Cursors">
         <metric name="Cursors"
                 alias="serverStatus_cursors_totalOpen"
+                interval="300000"
                 category="UTILIZATION"/>
         <metric name="Cursors Size"
                 alias="serverStatus_cursors_clientCursors_size"
+                interval="300000"
                 category="UTILIZATION"/>
         <metric name="Cursors Timed Out"
                 alias="serverStatus_cursors_timedOut"
                 category="UTILIZATION"
+                interval="300000"
                 collectionType="trendsup"/>
     </metrics>
 
@@ -300,22 +333,27 @@ mongo --host $1 --port $2 --quiet admin --eval "$JAVA_SCRIPT"
         <metric name="Asserts Regular"
                 alias="serverStatus_asserts_regular"
                 category="UTILIZATION"
+                interval="600000"
                 collectionType="trendsup"/>
         <metric name="Asserts Warning"
                 alias="serverStatus_asserts_warning"
                 category="UTILIZATION"
+                interval="600000"
                 collectionType="trendsup"/>
         <metric name="Asserts Msg"
                 alias="serverStatus_asserts_msg"
                 category="UTILIZATION"
+                interval="600000"
                 collectionType="trendsup"/>
         <metric name="Asserts User"
                 alias="serverStatus_asserts_user"
                 category="UTILIZATION"
+                interval="600000"
                 collectionType="trendsup"/>
         <metric name="Asserts Rollovers"
                 alias="serverStatus_asserts_rollovers"
                 category="UTILIZATION"
+                interval="600000"
                 collectionType="trendsup"/>
     </metrics>
 
@@ -324,19 +362,23 @@ mongo --host $1 --port $2 --quiet admin --eval "$JAVA_SCRIPT"
                 alias="serverStatus_backgroundFlushing_flushes"
                 category="UTILIZATION"
                 collectionType="trendsup"
+                interval="300000"
                 indicator="true"/>
         <metric name="Flush Duration"
                 alias="serverStatus_backgroundFlushing_total_ms"
                 category="UTILIZATION"
                 collectionType="trendsup"
+                interval="300000"
                 units="ms"/>
         <metric name="Flush Average Duration"
                 alias="serverStatus_backgroundFlushing_average_ms"
                 category="UTILIZATION"
+                interval="600000"
                 units="ms"/>
         <metric name="Flush Last Duration"
                 alias="serverStatus_backgroundFlushing_last_ms"
                 category="UTILIZATION"
+                interval="300000"
                 units="ms"/>
     </metrics>
 
@@ -344,6 +386,7 @@ mongo --host $1 --port $2 --quiet admin --eval "$JAVA_SCRIPT"
         <metric name="Process Cpu Usage"
                 template="sigar:Type=ProcCpu,Arg=%process.query%:Percent"
                 indicator="true"
+                interval="300000"
                 units="percentage"/>
     </metrics>
 
@@ -365,14 +408,18 @@ mongo --host $1 --port $2 --quiet admin --eval "$JAVA_SCRIPT"
 
             <option name="port"
                     description="MongoDB port number. Usually: 27017, 27018 or 27019"
+                    type="int"
                     default="27018"/>
 
             <option name="username"
-                    description="User name [Optional - Must have 'admin' database access if specified]"
+                    description="User name [Only if MongoDB Authorization has been enabled]"
+                    optional="true"
                     default=""/>
 
             <option name="password"
-                    description="Password [Optional]"
+                    description="Password [Only if MongoDB Authorization has been enabled]"
+                    type="secret"
+                    optional="true"
                     default=""/>
         </config>
 
@@ -400,13 +447,15 @@ mongo --host $1 --port $2 --quiet admin --eval "$JAVA_SCRIPT"
                 class="org.hyperic.hq.product.LogFileTailPlugin"/>
 
         <metric name="Availability"
-                template="${SERVER_STATUS}:serverStatus_ok"
+                template="sigar:Type=ProcState,Arg=%process.query%:State"
+                category="AVAILABILITY"
                 indicator="true"/>
 
         <metric name="Is Master?"
                 template="${SERVER_STATUS}:master"
-                category="AVAILABILITY"
-                units="percentage"/>
+                units="percentage"
+                interval="300000"
+                indicator="true"/>
 
         <metrics include="MongoDB Utilization"/>
         <metrics include="MongoDB Process Metrics"/>
