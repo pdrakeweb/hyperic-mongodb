@@ -1,0 +1,276 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+   Copyright 2011 Clarity Services, Inc.
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+
+    Document   : mongos-plugin.xml
+    Author     : Reid Morrison
+    Home Page  : https://github.com/ClarityServices/hyperic-mongos
+    Version    : 1.0
+    Description:
+        Hyperic HQ Plug-in to monitor MongoDB Router Servers
+-->
+<!DOCTYPE plugin [
+  <!ENTITY process-metrics SYSTEM "/pdk/plugins/process-metrics.xml">
+]>
+
+<plugin>
+    <!-- Invoke mongo shell and extract serverStatus -->
+    <script name="hq-mongos-stat">
+<![CDATA[
+#!/bin/bash
+# Parameters: %hostname% %port% %username% %password%
+#    username and password are optional, but must be supplied if the
+#    mongo server has been secured
+
+JAVA_SCRIPT=$(cat <<EOF
+// Print BSON as name value pairs
+function flattenBson(hash, prefix) {
+    for(key in hash) {
+        value = hash[key];
+        klass = Object.prototype.toString.call(value).slice(8, -1);
+        if(klass == "bson_object") {
+            flattenBson(value, prefix+"_"+key)
+        } else {
+            print(prefix+"_"+key+"="+value)
+        };
+    }
+};
+
+// Authenticate first if username was supplied
+if (("$3" != "") && ("$3" != "%username%")) {
+  if (db.auth("$3", "$4") != 1) {
+    print("Failed to authenticate. Bad Credentials");
+    exit(-1);
+  }
+}
+
+status = db.serverStatus();
+flattenBson(status, "serverStatus");
+EOF
+)
+
+mongo --host $1 --port $2 --quiet admin --eval "$JAVA_SCRIPT"
+]]>
+    </script>
+    <property name="SERVER_STATUS" value="exec:timeout=10,file=pdk/work/scripts/mongos/hq-mongos-stat,args=%hostname% %port% %username% %password%,exec=%exec%"/>
+    <filter name="template" value="${SERVER_STATUS}:${alias}"/>
+
+    <metrics name="MongoDB Utilization">
+        <metric name="Connections"
+                alias="serverStatus_connections_current"
+                category="UTILIZATION"
+                interval="300000"
+                indicator="true"/>
+        <metric name="Connections Available"
+                alias="serverStatus_connections_available"
+                interval="600000"
+                category="UTILIZATION"/>
+        <metric name="Uptime"
+                alias="serverStatus_uptime"
+                category="UTILIZATION"
+                interval="600000"
+                units="sec"/>
+
+        <!-- This metric is platform specific -->
+        <metric name="Page faults"
+                alias="serverStatus_extra_info_page_faults"
+                category="UTILIZATION"
+                collectionType="trendsup"
+                interval="300000"/>
+    </metrics>
+
+    <metrics name="MongoDB Network">
+        <metric name="Network In"
+                alias="serverStatus_network_bytesIn"
+                category="UTILIZATION"
+                indicator="true"
+                collectionType="trendsup"
+                interval="300000"
+                units="B"/>
+        <metric name="Network Out"
+                alias="serverStatus_network_bytesOut"
+                category="UTILIZATION"
+                indicator="true"
+                collectionType="trendsup"
+                interval="300000"
+                units="B"/>
+        <metric name="Network Requests"
+                alias="serverStatus_network_numRequests"
+                collectionType="trendsup"
+                interval="300000"
+                category="UTILIZATION"/>
+    </metrics>
+
+    <metrics name="MongoDB Memory">
+        <metric name="Virtual Memory Size"
+                alias="serverStatus_mem_virtual"
+                category="UTILIZATION"
+                indicator="true"
+                interval="300000"
+                units="MB"/>
+        <metric name="Resident Memory Size"
+                alias="serverStatus_mem_resident"
+                category="UTILIZATION"
+                indicator="true"
+                interval="300000"
+                units="MB"/>
+    </metrics>
+
+    <metrics name="MongoDB IO">
+    <!-- Operations -->
+        <metric name="Inserts"
+                alias="serverStatus_opcounters_insert"
+                category="THROUGHPUT"
+                collectionType="trendsup"
+                interval="300000"
+                indicator="true"/>
+
+        <metric name="Queries"
+                alias="serverStatus_opcounters_query"
+                category="THROUGHPUT"
+                collectionType="trendsup"
+                interval="300000"
+                indicator="true"/>
+
+        <metric name="Updates"
+                alias="serverStatus_opcounters_update"
+                category="THROUGHPUT"
+                collectionType="trendsup"
+                interval="300000"
+                indicator="true"/>
+
+        <metric name="Deletes"
+                alias="serverStatus_opcounters_delete"
+                category="THROUGHPUT"
+                collectionType="trendsup"
+                interval="300000"
+                indicator="true"/>
+
+        <metric name="Getmores"
+                alias="serverStatus_opcounters_getmore"
+                category="THROUGHPUT"
+                collectionType="trendsup"
+                interval="300000"
+                indicator="true"/>
+
+        <metric name="Commands"
+                alias="serverStatus_opcounters_command"
+                category="THROUGHPUT"
+                collectionType="trendsup"
+                interval="300000"
+                indicator="true"/>
+    </metrics>
+
+    <metrics name="MongoDB Asserts">
+        <metric name="Asserts Regular"
+                alias="serverStatus_asserts_regular"
+                category="UTILIZATION"
+                interval="600000"
+                collectionType="trendsup"/>
+        <metric name="Asserts Warning"
+                alias="serverStatus_asserts_warning"
+                category="UTILIZATION"
+                interval="600000"
+                collectionType="trendsup"/>
+        <metric name="Asserts Msg"
+                alias="serverStatus_asserts_msg"
+                category="UTILIZATION"
+                interval="600000"
+                collectionType="trendsup"/>
+        <metric name="Asserts User"
+                alias="serverStatus_asserts_user"
+                category="UTILIZATION"
+                interval="600000"
+                collectionType="trendsup"/>
+        <metric name="Asserts Rollovers"
+                alias="serverStatus_asserts_rollovers"
+                category="UTILIZATION"
+                interval="600000"
+                collectionType="trendsup"/>
+    </metrics>
+
+    <metrics name="MongoDB Process Metrics">
+        <metric name="Process Cpu Usage"
+                template="sigar:Type=ProcCpu,Arg=%process.query%:Percent"
+                indicator="true"
+                interval="300000"
+                units="percentage"/>
+    </metrics>
+
+    <server name="MongoDB Router" version="2.x">
+
+        <property name="PROC_QUERY" value="State.Name.eq=mongos,Args.*.eq=/etc/mongos.conf"/>
+        <property name="DEFAULT_CONFIG_FILE" value="/etc/mongos.conf"/>
+        <property name="DEFAULT_LOG_FILE" value="/var/log/mongo/mongos.log"/>
+        <property name="DEFAULT_PID_FILE" value="/var/run/mongo/mongos.pid"/>
+
+        <config>
+            <option name="process.query"
+                    description="PTQL for mongos process"
+                    default="${PROC_QUERY}"/>
+
+            <option name="hostname"
+                    description="Usually leave as localhost"
+                    default="localhost"/>
+
+            <option name="port"
+                    description="mongos port number"
+                    type="int"
+                    default="27017"/>
+
+            <option name="username"
+                    description="User name [Only if MongoDB Authorization has been enabled]"
+                    optional="true"
+                    default=""/>
+
+            <option name="password"
+                    description="Password [Only if MongoDB Authorization has been enabled]"
+                    type="secret"
+                    optional="true"
+                    default=""/>
+        </config>
+
+        <!--notifies the plugin to auto-discover one instance of each service-->
+        <property name="HAS_BUILTIN_SERVICES" value="true"/>
+
+        <plugin type="autoinventory"
+                class="org.hyperic.hq.product.DaemonDetector"/>
+        <plugin type="measurement"
+                class="org.hyperic.hq.product.MeasurementPlugin"/>
+        <plugin type="config_track"
+                class="org.hyperic.hq.product.ConfigFileTrackPlugin"/>
+        <plugin type="log_track"
+                class="org.hyperic.hq.product.LogFileTailPlugin"/>
+
+        <metric name="Availability"
+                template="sigar:Type=ProcState,Arg=%process.query%:State"
+                category="AVAILABILITY"
+                indicator="true"/>
+
+        <metrics include="MongoDB Utilization"/>
+        <metrics include="MongoDB Process Metrics"/>
+        <metrics include="MongoDB Network"/>
+        <metrics include="MongoDB Memory"/>
+        <metrics include="MongoDB IO"/>
+        <metrics include="MongoDB Asserts"/>
+    </server>
+
+    <help name="MongoDB Router">
+  Configure Hyperic for monitoring MongoDB Routing servers.
+  The port for mongos is by default 27017, please change the port above if required.
+  For servers that have more than one MongoDB instance, update the port.
+    </help>
+
+</plugin>

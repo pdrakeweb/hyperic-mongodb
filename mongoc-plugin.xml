@@ -14,29 +14,12 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 
-    Document   : mongodb-plugin.xml
+    Document   : mongoc-plugin.xml
     Author     : Reid Morrison
     Home Page  : https://github.com/ClarityServices/hyperic-mongodb
-    Version    : 2.1
+    Version    : 1.0
     Description:
-        Hyperic HQ Plug-in to monitor MongoDB
-
-    Version 2.1 Adds support for secured servers and re-introduces
-    process monitoring using config file name for process auto-detection
-
-    Version 2.0 brings the MongoDB Monitoring closer the figures
-    returned by mongostat, such as memory, faults, Queued Readers, etc.
-    Now supports monitoring remote MongoDB servers without requiring a
-    Hyperic Agent to be installed on the MongoDB server. Just requires mongostat
-    to be available on the machine where the Agent is running.
-    However, CPU utilization is no longer available through this plugin.
-    To get CPU utilization create a separate Process monitor through Hyperic.
-
-    All monitoring is performed by calling the following methods though Mongo Shell:
-    - db.serverStatus()
-    - db.getReplicationInfo()
-
-    db.getReplicationInfo() is only called if the server is part of a Replica Set
+        Hyperic HQ Plug-in to monitor MongoDB Configuration Servers
 -->
 <!DOCTYPE plugin [
   <!ENTITY process-metrics SYSTEM "/pdk/plugins/process-metrics.xml">
@@ -44,7 +27,7 @@
 
 <plugin>
     <!-- Invoke mongo shell and extract serverStatus -->
-    <script name="hq-mongodb-stat">
+    <script name="hq-mongoc-stat">
 <![CDATA[
 #!/bin/bash
 # Parameters: %hostname% %port% %username% %password%
@@ -52,33 +35,6 @@
 #    mongo server has been secured
 
 JAVA_SCRIPT=$(cat <<EOF
-// Print the number of seconds that this replica is behind
-function replicaSecondsBehind() {
-  status = rs.status();
-  // Extract replica delay for a secondary (slave) in a replica set
-  if(status["myState"] == 2) {
-    // Obtain optime for master and this replica
-    master_optime = null;
-    my_optime = null;
-    members = status["members"]
-    for(i in members) {
-      member = members[i];
-      if (member.self == true && member.optime) {
-        my_optime = member.optime.t;
-      } else if (member.state == 1) {
-        master_optime = member.optime.t;
-      }
-    }
-    if (master_optime && my_optime) {
-      secs = (master_optime - my_optime) / 1000
-      if (secs < 0) {
-        secs = 0;
-      }
-      print("replica_seconds_behind="+secs);
-    }
-  }
-};
-
 // Print BSON as name value pairs
 function flattenBson(hash, prefix) {
     for(key in hash) {
@@ -102,23 +58,13 @@ if (("$3" != "") && ("$3" != "%username%")) {
 
 status = db.serverStatus();
 flattenBson(status, "serverStatus");
-
-// Additional metrics only if in a Replica Set
-repl = status["repl"];
-if(repl != null) {
-    flattenBson(db.getReplicationInfo(), "replication_info")
-    if(repl["secondary"] == true) {
-        replicaSecondsBehind();
-    }
-    print("master=" + (repl["ismaster"] ? 1 : 0))
-};
 EOF
 )
 
 mongo --host $1 --port $2 --quiet admin --eval "$JAVA_SCRIPT"
 ]]>
     </script>
-    <property name="SERVER_STATUS" value="exec:timeout=10,file=pdk/work/scripts/mongodb/hq-mongodb-stat,args=%hostname% %port% %username% %password%,exec=%exec%"/>
+    <property name="SERVER_STATUS" value="exec:timeout=10,file=pdk/work/scripts/mongoc/hq-mongoc-stat,args=%hostname% %port% %username% %password%,exec=%exec%"/>
     <filter name="template" value="${SERVER_STATUS}:${alias}"/>
 
     <metrics name="MongoDB Utilization">
@@ -131,17 +77,6 @@ mongo --host $1 --port $2 --quiet admin --eval "$JAVA_SCRIPT"
                 alias="serverStatus_connections_available"
                 interval="600000"
                 category="UTILIZATION"/>
-        <metric name="Replication Delay"
-                alias="replica_seconds_behind"
-                category="UTILIZATION"
-                units="sec"
-                interval="300000"
-                indicator="true"/>
-        <metric name="Replication Log Available"
-                alias="replication_info_timeDiff"
-                category="UTILIZATION"
-                interval="600000"
-                units="sec"/>
         <metric name="Uptime"
                 alias="serverStatus_uptime"
                 category="UTILIZATION"
@@ -153,22 +88,19 @@ mongo --host $1 --port $2 --quiet admin --eval "$JAVA_SCRIPT"
                 alias="serverStatus_extra_info_page_faults"
                 category="UTILIZATION"
                 collectionType="trendsup"
-                interval="300000"
-                indicator="true"/>
+                interval="300000"/>
     </metrics>
 
     <metrics name="MongoDB Network">
         <metric name="Network In"
                 alias="serverStatus_network_bytesIn"
                 category="UTILIZATION"
-                indicator="true"
                 collectionType="trendsup"
                 interval="300000"
                 units="B"/>
         <metric name="Network Out"
                 alias="serverStatus_network_bytesOut"
                 category="UTILIZATION"
-                indicator="true"
                 collectionType="trendsup"
                 interval="300000"
                 units="B"/>
@@ -206,36 +138,31 @@ mongo --host $1 --port $2 --quiet admin --eval "$JAVA_SCRIPT"
                 alias="serverStatus_opcounters_insert"
                 category="THROUGHPUT"
                 collectionType="trendsup"
-                interval="300000"
-                indicator="true"/>
+                interval="300000"/>
 
         <metric name="Queries"
                 alias="serverStatus_opcounters_query"
                 category="THROUGHPUT"
                 collectionType="trendsup"
-                interval="300000"
-                indicator="true"/>
+                interval="300000"/>
 
         <metric name="Updates"
                 alias="serverStatus_opcounters_update"
                 category="THROUGHPUT"
                 collectionType="trendsup"
-                interval="300000"
-                indicator="true"/>
+                interval="300000"/>
 
         <metric name="Deletes"
                 alias="serverStatus_opcounters_delete"
                 category="THROUGHPUT"
                 collectionType="trendsup"
-                interval="300000"
-                indicator="true"/>
+                interval="300000"/>
 
         <metric name="Getmores"
                 alias="serverStatus_opcounters_getmore"
                 category="THROUGHPUT"
                 collectionType="trendsup"
-                interval="300000"
-                indicator="true"/>
+                interval="300000"/>
 
         <metric name="Commands"
                 alias="serverStatus_opcounters_command"
@@ -256,17 +183,16 @@ mongo --host $1 --port $2 --quiet admin --eval "$JAVA_SCRIPT"
         <metric name="Queued Requests"
                 alias="serverStatus_globalLock_currentQueue_total"
                 interval="300000"
-                category="UTILIZATION"/>
+                category="UTILIZATION"
+                indicator="true"/>
         <metric name="Queued Readers"
                 alias="serverStatus_globalLock_currentQueue_readers"
                 category="UTILIZATION"
-                interval="300000"
-                indicator="true"/>
+                interval="300000"/>
         <metric name="Queued Writers"
                 alias="serverStatus_globalLock_currentQueue_writers"
                 category="UTILIZATION"
-                interval="300000"
-                indicator="true"/>
+                interval="300000"/>
         <metric name="Active Clients"
                 alias="serverStatus_globalLock_activeClients_total"
                 interval="300000"
@@ -274,13 +200,11 @@ mongo --host $1 --port $2 --quiet admin --eval "$JAVA_SCRIPT"
         <metric name="Active Readers"
                 alias="serverStatus_globalLock_activeClients_readers"
                 category="UTILIZATION"
-                interval="300000"
-                indicator="true"/>
+                interval="300000"/>
         <metric name="Active Writers"
                 alias="serverStatus_globalLock_activeClients_writers"
                 category="UTILIZATION"
-                interval="300000"
-                indicator="true"/>
+                interval="300000"/>
     </metrics>
 
     <metrics name="MongoDB Index">
@@ -298,8 +222,7 @@ mongo --host $1 --port $2 --quiet admin --eval "$JAVA_SCRIPT"
                 alias="serverStatus_indexCounters_btree_misses"
                 category="UTILIZATION"
                 collectionType="trendsup"
-                interval="300000"
-                indicator="true"/>
+                interval="300000"/>
         <metric name="Index Resets"
                 alias="serverStatus_indexCounters_btree_resets"
                 category="UTILIZATION"
@@ -388,16 +311,16 @@ mongo --host $1 --port $2 --quiet admin --eval "$JAVA_SCRIPT"
                 units="percentage"/>
     </metrics>
 
-    <server name="MongoDB" version="2.x">
+    <server name="MongoDB Config Server" version="2.x">
 
-        <property name="PROC_QUERY" value="State.Name.eq=mongod,Args.*.eq=/etc/mongod.conf"/>
-        <property name="DEFAULT_CONFIG_FILE" value="/etc/mongod.conf"/>
-        <property name="DEFAULT_LOG_FILE" value="/var/log/mongo/mongod.log"/>
-        <property name="DEFAULT_PID_FILE" value="/var/run/mongo/mongod.pid"/>
+        <property name="PROC_QUERY" value="State.Name.eq=mongod,Args.*.eq=/etc/mongoc.conf"/>
+        <property name="DEFAULT_CONFIG_FILE" value="/etc/mongoc.conf"/>
+        <property name="DEFAULT_LOG_FILE" value="/var/log/mongo/mongoc.log"/>
+        <property name="DEFAULT_PID_FILE" value="/var/run/mongo/mongoc.pid"/>
 
         <config>
             <option name="process.query"
-                    description="PTQL for MongoDB Process"
+                    description="PTQL for MongoDB Config Process"
                     default="${PROC_QUERY}"/>
 
             <option name="hostname"
@@ -405,9 +328,9 @@ mongo --host $1 --port $2 --quiet admin --eval "$JAVA_SCRIPT"
                     default="localhost"/>
 
             <option name="port"
-                    description="MongoDB port number. Usually: 27017, 27018 or 27019"
+                    description="MongoDB Config server port number"
                     type="int"
-                    default="27018"/>
+                    default="27019"/>
 
             <option name="username"
                     description="User name [Only if MongoDB Authorization has been enabled]"
@@ -420,17 +343,6 @@ mongo --host $1 --port $2 --quiet admin --eval "$JAVA_SCRIPT"
                     optional="true"
                     default=""/>
         </config>
-
-        <!-- Display inventory properties on the UI
-             These properties do not show up in Hyperic :(
-             Any help here will be appreciated
-        -->
-        <properties>
-            <property name="serverStatus_version"
-                      description="MongoDB Version"/>
-            <property name="serverStatus_mem_bits"
-                      description="MongoDB Build (bits)"/>
-        </properties>
 
         <!--notifies the plugin to auto-discover one instance of each service-->
         <property name="HAS_BUILTIN_SERVICES" value="true"/>
@@ -449,12 +361,6 @@ mongo --host $1 --port $2 --quiet admin --eval "$JAVA_SCRIPT"
                 category="AVAILABILITY"
                 indicator="true"/>
 
-        <metric name="Is Master?"
-                template="${SERVER_STATUS}:master"
-                units="percentage"
-                interval="300000"
-                indicator="true"/>
-
         <metrics include="MongoDB Utilization"/>
         <metrics include="MongoDB Process Metrics"/>
         <metrics include="MongoDB Network"/>
@@ -467,9 +373,9 @@ mongo --host $1 --port $2 --quiet admin --eval "$JAVA_SCRIPT"
         <metrics include="MongoDB Background Flushing"/>
     </server>
 
-    <help name="MongoDB">
+    <help name="MongoDB Config Server">
   Configure Hyperic for monitoring MongoDB.
-  The port for Mongodb is by default 27018, please change the port above if required.
+  The port for Mongodb config server is by default 27019, please change the port above if required.
   For servers that have more than one MongoDB instance, update the port.
     </help>
 
