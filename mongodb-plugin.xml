@@ -390,7 +390,7 @@ mongo --host $1 --port $2 --quiet admin --eval "$JAVA_SCRIPT"
 
     <server name="MongoDB" version="2.x">
 
-        <property name="PROC_QUERY" value="State.Name.eq=mongod,Args.*.eq=/etc/mongod.conf"/>
+        <property name="PROC_QUERY" value="State.Name.eq=mongod,Args.*.re=/etc/mongodb?.conf"/>
         <property name="DEFAULT_CONFIG_FILE" value="/etc/mongod.conf"/>
         <property name="DEFAULT_LOG_FILE" value="/var/log/mongo/mongod.log"/>
         <property name="DEFAULT_PID_FILE" value="/var/run/mongo/mongod.pid"/>
