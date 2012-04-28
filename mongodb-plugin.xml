@@ -391,9 +391,9 @@ mongo --host $1 --port $2 --quiet admin --eval "$JAVA_SCRIPT"
     <server name="MongoDB" version="2.x">
 
         <property name="PROC_QUERY" value="State.Name.eq=mongod,Args.*.re=/etc/mongodb?.conf"/>
-        <property name="DEFAULT_CONFIG_FILE" value="/etc/mongod.conf"/>
-        <property name="DEFAULT_LOG_FILE" value="/var/log/mongo/mongod.log"/>
-        <property name="DEFAULT_PID_FILE" value="/var/run/mongo/mongod.pid"/>
+        <property name="DEFAULT_CONFIG_FILE" value="/etc/mongodb.conf"/>
+        <property name="DEFAULT_LOG_FILE" value="/var/log/mongodb/mongodb.log"/>
+        <property name="DEFAULT_PID_FILE" value="/var/run/mongodb/mongodb.pid"/>
 
         <config>
             <option name="process.query"
@@ -407,7 +407,7 @@ mongo --host $1 --port $2 --quiet admin --eval "$JAVA_SCRIPT"
             <option name="port"
                     description="MongoDB port number. Usually: 27017, 27018 or 27019"
                     type="int"
-                    default="27018"/>
+                    default="27017"/>
 
             <option name="username"
                     description="User name [Only if MongoDB Authorization has been enabled]"
